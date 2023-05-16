@@ -1,6 +1,5 @@
 type Transfer @entity {
-  id:ID!
-  owner:String!
+  id: ID!
+  owner: String!
+  beforeOwner: String!
 }
-
-

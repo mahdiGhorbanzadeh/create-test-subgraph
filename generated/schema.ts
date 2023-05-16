@@ -62,4 +62,17 @@ export class Transfer extends Entity {
   set owner(value: string) {
     this.set("owner", Value.fromString(value));
   }
+
+  get beforeOwner(): string {
+    let value = this.get("beforeOwner");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toString();
+    }
+  }
+
+  set beforeOwner(value: string) {
+    this.set("beforeOwner", Value.fromString(value));
+  }
 }
