@@ -1,8 +1,6 @@
 type Transfer @entity {
   id:ID!
-  from: String!
-  to: String!
-  amount:BigInt!
+  owner:String!
 }
 
 

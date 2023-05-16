@@ -4,54 +4,57 @@ import {
   test,
   clearStore,
   beforeAll,
-  afterAll
-} from "matchstick-as/assembly/index"
-import { Address } from "@graphprotocol/graph-ts"
-import { AdminChanged } from "../generated/schema"
-import { AdminChanged as AdminChangedEvent } from "../generated/Tree/Tree"
-import { handleAdminChanged } from "../src/tree"
-import { createAdminChangedEvent } from "./tree-utils"
+  afterAll,
+  newMockEvent,
+} from "matchstick-as/assembly/index";
+import { Transfer as TransferEvent } from "../generated/Tree/Tree";
+import { Address, BigInt, ethereum } from "@graphprotocol/graph-ts";
+import { handleTransfer } from "../src/tree";
 
-// Tests structure (matchstick-as >=0.5.0)
-// https://thegraph.com/docs/en/developer/matchstick/#tests-structure-0-5-0
+export function createNewTransferEvent(
+  from: string,
+  to: string,
+  tokenId: BigInt,
+): TransferEvent {
+  let newTransferEvent = changetype<TransferEvent>(newMockEvent());
 
-describe("Describe entity assertions", () => {
-  beforeAll(() => {
-    let previousAdmin = Address.fromString(
-      "0x0000000000000000000000000000000000000001"
-    )
-    let newAdmin = Address.fromString(
-      "0x0000000000000000000000000000000000000001"
-    )
-    let newAdminChangedEvent = createAdminChangedEvent(previousAdmin, newAdmin)
-    handleAdminChanged(newAdminChangedEvent)
-  })
+  newTransferEvent.parameters = new Array();
 
-  afterAll(() => {
-    clearStore()
-  })
+  let fromParam = new ethereum.EventParam(
+    "from",
+    ethereum.Value.fromAddress(Address.fromString(from)),
+  );
 
-  // For more test scenarios, see:
-  // https://thegraph.com/docs/en/developer/matchstick/#write-a-unit-test
+  let toParam = new ethereum.EventParam(
+    "to",
+    ethereum.Value.fromAddress(Address.fromString(to)),
+  );
 
-  test("AdminChanged created and stored", () => {
-    assert.entityCount("AdminChanged", 1)
+  let tokenIdParam = new ethereum.EventParam(
+    "tokenId",
+    ethereum.Value.fromUnsignedBigInt(tokenId),
+  );
 
-    // 0xa16081f360e3847006db660bae1c6d1b2e17ec2a is the default address used in newMockEvent() function
-    assert.fieldEquals(
-      "AdminChanged",
-      "0xa16081f360e3847006db660bae1c6d1b2e17ec2a-1",
-      "previousAdmin",
-      "0x0000000000000000000000000000000000000001"
-    )
-    assert.fieldEquals(
-      "AdminChanged",
-      "0xa16081f360e3847006db660bae1c6d1b2e17ec2a-1",
-      "newAdmin",
-      "0x0000000000000000000000000000000000000001"
-    )
+  newTransferEvent.parameters.push(fromParam);
+  newTransferEvent.parameters.push(toParam);
+  newTransferEvent.parameters.push(tokenIdParam);
 
-    // More assert options:
-    // https://thegraph.com/docs/en/developer/matchstick/#asserts
-  })
-})
+  return newTransferEvent;
+}
+
+describe("Test tree event", () => {
+  let newTreeTransferEvent = createNewTransferEvent(
+    "0x680da7f9a4A3C1Ba9437FFEb90813855F686280C",
+    "0xE8B6699D2B6B83Ba305E4a1e78be499eE3119576",
+    new BigInt(10),
+  );
+
+  handleTransfer(newTreeTransferEvent);
+
+  assert.fieldEquals(
+    "Transfer",
+    "10",
+    "owner",
+    "0xE8B6699D2B6B83Ba305E4a1e78be499eE3119576",
+  );
+});
